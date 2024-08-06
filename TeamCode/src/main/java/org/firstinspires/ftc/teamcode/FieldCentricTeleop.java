@@ -18,8 +18,11 @@ import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
  */
 @TeleOp(group = "advanced")
 public class FieldCentricTeleop extends LinearOpMode {
+
+    boolean SlowMode = false;
     private static final SampleMecanumDrive.DirectionEnum direction = SampleMecanumDrive.DirectionEnum.WEST;
     @Override
+
 
     public void runOpMode() throws InterruptedException {
         // Initialize SampleMecanumDrive
@@ -31,7 +34,7 @@ public class FieldCentricTeleop extends LinearOpMode {
 
         // Retrieve our pose from the PoseStorage.currentPose static field
         // See AutoTransferPose.java for further details
-
+        drive.setPoseEstimate(PoseStorage.currentPose);
 
         waitForStart();
 
@@ -41,6 +44,8 @@ public class FieldCentricTeleop extends LinearOpMode {
             // Read pose
             Pose2d poseEstimate = drive.getPoseEstimate();
 
+
+
             // Create a vector from the gamepad x/y inputs
             // Then, rotate that vector by the inverse of that heading
             Vector2d input = new Vector2d(
@@ -48,18 +53,38 @@ public class FieldCentricTeleop extends LinearOpMode {
                     -gamepad1.left_stick_x
             ).rotated(-poseEstimate.getHeading());
 
+            if (gamepad1.left_bumper) {
+                drive.setWeightedDrivePower(
+                        new Pose2d(
+                                input.getX()/2,
+                                input.getY()/2,
+                                -gamepad1.right_stick_y/2
+                        )
+                );
+
+                SlowMode = true;
+
+
+            }
+            else {
+
+                drive.setWeightedDrivePower(
+                        new Pose2d(
+                                input.getX(),
+                                input.getY(),
+                                -gamepad1.right_stick_y
+                        )
+                );
+                SlowMode = false;
+
+            }
             // Pass in the rotated input + right stick value for rotation
             // Rotation is not part of the rotated input thus must be passed in separately
-            drive.setWeightedDrivePower(
-                    new Pose2d(
-                            input.getX(),
-                            input.getY(),
-                            -gamepad1.right_stick_x
-                    )
-            );
+
 
             // Update everything. Odometry. Etc.
             drive.update();
+
 
             // Print pose to telemetry
             telemetry.addData("x", poseEstimate.getX());

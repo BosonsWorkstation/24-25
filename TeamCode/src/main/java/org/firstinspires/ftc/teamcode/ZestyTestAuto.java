@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -16,6 +17,7 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.ExposureControl;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.GainControl;
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
+import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.tfod.TfodProcessor;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
@@ -73,13 +75,31 @@ public class ZestyTestAuto extends LinearOpMode {
         SampleMecanumDrive drive = new SampleMecanumDrive(this.hardwareMap,this.telemetry,direction);
         sampleMecanumDrive.initialzeAttachments(hardwareMap);
 
-        Trajectory ZestyTrajectory = drive.trajectoryBuilder(new Pose2d())
-                .strafeLeft(10)
+        Pose2d startPose = new Pose2d(12, -61, Math.toRadians(90));
+        drive.setPoseEstimate(startPose);
+
+        TrajectorySequence Pos1Place = drive.trajectorySequenceBuilder(new Pose2d())
+                .lineToLinearHeading(new Pose2d(12,-30,Math.toRadians(180)))
+                .forward(5)
+                .back(5)
+                .lineToLinearHeading(new Pose2d(48,-30,0))
                 .build();
-        Trajectory ZestyTrajectory1 = drive.trajectoryBuilder(new Pose2d())
-                .forward(10)
+
+        TrajectorySequence Pos2Place = drive.trajectorySequenceBuilder(new Pose2d())
+                .forward(30)
+                .back(5)
+                .lineToLinearHeading(new Pose2d(48,-36,0))
+                .build();
+
+        TrajectorySequence Pos3Place = drive.trajectorySequenceBuilder(new Pose2d())
+                .lineToLinearHeading(new Pose2d(12,-30,Math.toRadians(0)))
+                .forward(5)
+                .back(5)
+                .lineToLinearHeading(new Pose2d(12,-38,Math.toRadians(0)))
+                .splineToConstantHeading(new Vector2d(48,-42),0)
 
                 .build();
+
 
         waitForStart();
 
@@ -97,15 +117,18 @@ public class ZestyTestAuto extends LinearOpMode {
         if (Position3 == true) {
             telemetry.addData("pos 3", "");
             //Position = 3
+            drive.followTrajectorySequence(Pos3Place);
         }
         else if(Position2 == true){
             telemetry.addData("pos 2","");
             //Position = 2
+            drive.followTrajectorySequence(Pos2Place);
         }
         else {
             Position1 = true;
             telemetry.addData("pos 1", "");
             //Position = 1
+            drive.followTrajectorySequence(Pos1Place);
         }
 
         initAprilTag();
@@ -189,9 +212,9 @@ public class ZestyTestAuto extends LinearOpMode {
 
 
 
-        drive.followTrajectory(ZestyTrajectory);
-        drive.followTrajectory(ZestyTrajectory1);
-        drive.turn(90);
+
+
+        PoseStorage.currentPose = drive.getPoseEstimate();
     }
 
     private void initAprilTag() {
